@@ -2,16 +2,30 @@
 
 use Ace\Token\Csrf;
 use Ace\Token\Nonce;
+use Ace\Session;
 
 class Connect
 {
+    private $session;
+
+    public function __construct(Session $session)
+    {
+        $this->session = $session;
+    }
+
     public function generateCsrfToken()
     {
-        return new Csrf;
+        $csrf = new Csrf;
+        $key = 'authn.csrf.token';
+        $this->session->store($key, $csrf);
+        return $csrf;
     }
 
     public function generateNonceToken()
     {
-        return new Nonce;
+        $nonce = new Nonce;
+        $key = 'authn.nonce.token';
+        $this->session->store($key, $nonce);
+        return $nonce;
     }
 }
