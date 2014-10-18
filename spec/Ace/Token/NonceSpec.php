@@ -14,11 +14,11 @@ class NonceSpec extends ObjectBehavior
 
     public function it_has_a_string_value()
     {
-        $this->_toString()->shouldBeString();
+        $this->__toString()->shouldBeString();
     }
 
     public function it_should_not_be_empty()
     {
-        $this->_toString()->shouldNotBeEqualTo('');
+        $this->__toString()->shouldNotBeEqualTo('');
     }
 }

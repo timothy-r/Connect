@@ -1,5 +1,6 @@
 <?php namespace spec\Ace\Token;
 
+use Ace\Token\Csrf;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
@@ -12,11 +13,17 @@ class CsrfSpec extends ObjectBehavior
 
     public function it_has_a_string_value()
     {
-        $this->_toString()->shouldBeString();
+        $this->__toString()->shouldBeString();
     }
 
     public function it_should_not_be_empty()
     {
-        $this->_toString()->shouldNotBeEqualTo('');
+        $this->__toString()->shouldNotBeEqualTo('');
+    }
+
+    public function it_does_not_equal_other_csrf_token()
+    {
+        $other = new Csrf;
+        $this->matches($other)->shouldNotBeEqualTo(true);
     }
 }
