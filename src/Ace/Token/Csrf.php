@@ -2,7 +2,12 @@
 
 class Csrf
 {
-    private $value = 'sss';
+    private $value;
+    
+    public function __construct()
+    {
+        $this->value = hash('md5', rand());
+    }
 
     public function __toString()
     {
