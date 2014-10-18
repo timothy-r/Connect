@@ -26,4 +26,10 @@ class CsrfSpec extends ObjectBehavior
         $other = new Csrf;
         $this->matches($other)->shouldNotBeEqualTo(true);
     }
+
+    public function it_does_equal_own_csrf_token()
+    {
+        $token = $this->__toString();
+        $this->matches($token)->shouldBeEqualTo(true);
+    }
 }
