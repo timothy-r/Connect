@@ -1,6 +1,4 @@
-<?php
-
-namespace spec\Ace\OpenId;
+<?php namespace spec\Ace\OpenId;
 
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
