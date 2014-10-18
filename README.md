@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/timothy-r/connect.png)](https://travis-ci.org/timothy-r/connect) 
+[![Build Status](https://travis-ci.org/timothy-r/Connect.png)](https://travis-ci.org/timothy-r/Connect) 
 
 Connect
 =======
