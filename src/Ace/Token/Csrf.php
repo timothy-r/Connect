@@ -2,7 +2,7 @@
 
 class Csrf
 {
-    private $value = '';
+    private $value = 'sss';
 
     public function _toString()
     {

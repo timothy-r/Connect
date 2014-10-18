@@ -14,4 +14,9 @@ class CsrfSpec extends ObjectBehavior
     {
         $this->_toString()->shouldBeString();
     }
+
+    public function it_should_not_be_empty()
+    {
+        $this->_toString()->shouldNotBeEqualTo('');
+    }
 }
