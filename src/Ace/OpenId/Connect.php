@@ -3,14 +3,18 @@
 use Ace\Token\Csrf;
 use Ace\Token\Nonce;
 use Ace\Session;
+use Ace\StoreInterface;
 
 class Connect
 {
     private $session;
+    
+    private $nonce_store;
 
-    public function __construct(Session $session)
+    public function __construct(Session $session, StoreInterface $nonce_store)
     {
         $this->session = $session;
+        $this->nonce_store = $nonce_store;
     }
 
     public function generateCsrfToken()
@@ -41,6 +45,12 @@ class Connect
 
     public function validateNonceToken(Nonce $nonce)
     {
-        return $nonce->matches($this->session->get('authn.nonce.token'));
+        if($nonce->matches($this->session->get('authn.nonce.token'))){
+            // check nonce hasn't been used before
+            return !$this->nonce_store->contains($nonce);
+        } else {
+            return false;
+        }
     }
+
 }

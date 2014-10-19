@@ -2,15 +2,18 @@
 
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
+
 use Ace\Session;
+use Ace\StoreInterface;
+
 use Ace\Token\Csrf;
 use Ace\Token\Nonce;
 
 class ConnectSpec extends ObjectBehavior
 {
-    public function let(Session $session)
+    public function let(Session $session, StoreInterface $store)
     {
-        $this->beConstructedWith($session);
+        $this->beConstructedWith($session, $store);
     }
 
     public function it_is_initializable()
@@ -72,8 +75,11 @@ class ConnectSpec extends ObjectBehavior
         $this->validateNonceToken(new Nonce($nonce_token))->shouldReturn(true);
     }
 
-    public function it_validates_nonce_is_not_reused()
+    public function it_validates_nonce_is_not_reused(Session $session, StoreInterface $store)
     {
-
+        $nonce_token = 'abcdef';
+        $session->get('authn.nonce.token')->willReturn($nonce_token);
+        $store->contains($nonce_token)->willReturn(false);
+        $this->validateNonceToken(new Nonce($nonce_token))->shouldReturn(true);
     }
 }
