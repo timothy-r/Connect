@@ -115,6 +115,59 @@ class ConnectSpec extends ObjectBehavior
     public function it_fails_validation_when_response_is_empty(Session $session, StoreInterface $store)
     {
         $response = [];
-        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponse', array($response));
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
+    }
+
+    public function it_fails_validation_when_token_type_is_missing(Session $session, StoreInterface $store)
+    {
+        $response = [
+            'access_token' => 'xyz',
+            'id_token' => 'value',
+            'nonce' => 'abcdef',
+            'csrf' => '123456',
+        ];
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
+    }
+
+    public function it_fails_validation_when_token_type_is_invalid(Session $session, StoreInterface $store)
+    {
+        $response = [
+            'access_token' => 'xyz',
+            'token_type' => 'garbage'
+        ];
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
+    }
+
+    public function it_fails_validation_when_id_token_is_missing(Session $session, StoreInterface $store)
+    {
+        $response = [
+            'access_token' => 'xyz',
+            'token_type' => 'bearer',
+            'nonce' => 'abcdef',
+            'csrf' => '123456',
+        ];
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
+    }
+
+    public function it_fails_validation_when_nonce_is_missing(Session $session, StoreInterface $store)
+    {
+        $response = [
+            'access_token' => 'xyz',
+            'token_type' => 'bearer',
+            'id_token' => 'value',
+            'csrf' => '123456'
+        ];
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
+    }
+
+    public function it_fails_validation_when_csrf_is_missing(Session $session, StoreInterface $store)
+    {
+        $response = [
+            'access_token' => 'xyz',
+            'token_type' => 'bearer',
+            'id_token' => 'value',
+            'nonce' => 'abcdef'
+        ];
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
     }
 }

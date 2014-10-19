@@ -76,10 +76,19 @@ class Connect
     /**
     * validate necessary response parameters are set and have correct values
     */
-    public function validateResponse(array $parameters)
+    public function validateResponseParameters(array $parameters)
     {
-        if (!isset($parameters['access_token'])){
-            throw new ResponseException("'access_token' parameter must be set");
+        // validate that expected keys are set
+        $required_keys = ['access_token', 'token_type', 'id_token', 'nonce', 'csrf'];
+        foreach ($required_keys as $key) {
+            if (!isset($parameters[$key])){
+                throw new ResponseException("'$key' parameter must be set");
+            }
+        }
+    
+        // validate key values
+        if ('bearer' != $parameters['token_type']){
+            throw new ResponseException("'token_type' parameter must equal 'bearer'");
         }
     }
 }
