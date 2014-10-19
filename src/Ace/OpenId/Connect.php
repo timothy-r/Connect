@@ -71,7 +71,7 @@ class Connect
             throw new ResponseException("'token_type' parameter is invalid");
         }
 
-        if (!$this->validateCsrfToken($parameters['state'])){
+        if (!$this->validateSessionToken(self::$csrf_session_key, $parameters['state'])){
             throw new ResponseException("'state' parameter is invalid");
         }
 
@@ -108,16 +108,14 @@ class Connect
         return 'bearer' == strtolower($type);
     }
 
-    private function validateCsrfToken($state)
+    private function validateSessionToken($session_key, $token)
     {
-        $csrf = new Token($state);
-        return $csrf->matches($this->session->get(self::$csrf_session_key));
+        return (new Token($token))->matches($this->session->get($session_key));
     }
 
     private function validateNonceToken($nonce)
     {
-        $nonce = new Token($nonce);
-        if ($nonce->matches($this->session->get(self::$nonce_session_key))){
+        if ($this->validateSessionToken(self::$nonce_session_key, $nonce)){
             // check nonce hasn't been used before
             return !$this->nonce_store->contains($nonce);
         } else {
