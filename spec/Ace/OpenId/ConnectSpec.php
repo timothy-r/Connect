@@ -38,28 +38,28 @@ class ConnectSpec extends ObjectBehavior
     {
         $session->has('authn.csrf.token')->willReturn(false);
         $session->has('authn.nonce.token')->willReturn(false);
-        $this->localTokensExist()->shouldReturn(false);
+        $this->localTokensExist()->shouldBeFalse();
     }
 
     public function it_fails_validation_when_csrf_token_is_not_stored_locally(Session $session)
     {
         $session->has('authn.csrf.token')->willReturn(false);
         $session->has('authn.nonce.token')->willReturn(true);
-        $this->localTokensExist()->shouldReturn(false);
+        $this->localTokensExist()->shouldBeFalse();
     }
 
     public function it_fails_validation_when_nonce_token_is_not_stored_locally(Session $session)
     {
         $session->has('authn.csrf.token')->willReturn(true);
         $session->has('authn.nonce.token')->willReturn(false);
-        $this->localTokensExist()->shouldReturn(false);
+        $this->localTokensExist()->shouldBeFalse();
     }
 
     public function it_passes_validation_when_tokens_are_stored_locally(Session $session)
     {
         $session->has('authn.csrf.token')->willReturn(true);
         $session->has('authn.nonce.token')->willReturn(true);
-        $this->localTokensExist()->shouldReturn(true);
+        $this->localTokensExist()->shouldBeTrue();
     }
 
     public function it_generates_all_request_parameters(Session $session)
@@ -67,12 +67,7 @@ class ConnectSpec extends ObjectBehavior
         $redirect_uri = 'https://my.host.com/page';
 
         $this->generateRequestParameters($redirect_uri)->shouldBeArray();
-        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('response_type');
-        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('client_id');
-        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('redirect_uri');
-        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('scope');
-        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('state');
-        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('nonce');
+        $this->generateRequestParameters($redirect_uri)->shouldHaveKeys(['response_type','client_id','redirect_uri','scope','state','nonce']);
     }
 
     public function it_fails_validation_when_response_is_empty(Session $session, StoreInterface $store)
@@ -264,12 +259,32 @@ class ConnectSpec extends ObjectBehavior
         $token->getClaims()->willReturn(['sub' => 'abc']);
         $token->validate(Argument::any(), Argument::any(), 'abc')->willReturn(true);
     
-        $this->validateResponseParameters($response)->shouldReturn(true);
+        $this->validateResponseParameters($response)->shouldBeTrue();
     }
 
     public function it_logs_user_out_locally(Session $session)
     {
         $session->store('authn.logout.local', 1)->shouldBeCalled();
         $this->logoutLocally();
+    }
+
+    function getMatchers()
+    {
+        return [
+            'beTrue' => function($subject) {
+                return $subject === true;
+            },
+            'beFalse' => function($subject) {
+                return $subject === false;
+            },
+            'haveKeys' => function($subject, $keys){
+                foreach($keys as $key){
+                    if (!isset($subject[$key])){
+                        return false;
+                    }
+                    return true;
+                }
+            },
+        ];
     }
 }
