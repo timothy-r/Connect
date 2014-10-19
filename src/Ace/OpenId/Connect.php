@@ -9,11 +9,15 @@ use Ace\StoreInterface;
 
 class Connect
 {
-    private static $issuer = 'https://my.domain.com';
+    private static $issuer = 'https://authn.server.com';
 
     private static $client_id = 'Client';
 
     private static $client_key = '13d63cd20abaabdc148c46fc71566636';
+    
+    private static $csrf_session_key = 'authn.csrf.token';
+
+    private static $nonce_session_key = 'authn.nonce.token';
 
     private $session;
     
@@ -30,7 +34,7 @@ class Connect
 
     public function localTokensExist()
     {
-        return $this->session->has('authn.csrf.token') && $this->session->has('authn.nonce.token');
+        return $this->session->has(self::$csrf_session_key) && $this->session->has(self::$nonce_session_key);
     }
 
     /**
@@ -67,11 +71,11 @@ class Connect
             throw new ResponseException("'token_type' parameter is invalid");
         }
 
-        if (!$this->validateCsrfToken(new Token($parameters['state']))){
+        if (!$this->validateCsrfToken($parameters['state'])){
             throw new ResponseException("'state' parameter is invalid");
         }
 
-        if (!$this->validateNonceToken(new Token($parameters['nonce']))){
+        if (!$this->validateNonceToken($parameters['nonce'])){
             throw new ResponseException("'nonce' parameter is invalid");
         }
 
@@ -104,14 +108,16 @@ class Connect
         return 'bearer' == strtolower($type);
     }
 
-    private function validateCsrfToken(Token $csrf)
+    private function validateCsrfToken($state)
     {
-        return $csrf->matches($this->session->get('authn.csrf.token'));
+        $csrf = new Token($state);
+        return $csrf->matches($this->session->get(self::$csrf_session_key));
     }
 
-    private function validateNonceToken(Token $nonce)
+    private function validateNonceToken($nonce)
     {
-        if ($nonce->matches($this->session->get('authn.nonce.token'))){
+        $nonce = new Token($nonce);
+        if ($nonce->matches($this->session->get(self::$nonce_session_key))){
             // check nonce hasn't been used before
             return !$this->nonce_store->contains($nonce);
         } else {
@@ -122,16 +128,23 @@ class Connect
     private function generateCsrfToken()
     {
         $csrf = new Token;
-        $key = 'authn.csrf.token';
-        $this->session->store($key, $csrf);
+        $this->session->store(self::$csrf_session_key, $csrf);
         return $csrf;
     }
 
     private function generateNonceToken()
     {
         $nonce = new Token;
-        $key = 'authn.nonce.token';
-        $this->session->store($key, $nonce);
+        $this->session->store(self::$nonce_session_key, $nonce);
         return $nonce;
+    }
+    
+    /**
+    * Register that the user has logged out locally
+    * Should really indicate the the user is now unauthenticated
+    */
+    public function logoutLocally()
+    {
+        $this->session->store('authn.logout.local', 1);
     }
 }

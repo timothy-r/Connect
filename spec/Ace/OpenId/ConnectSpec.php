@@ -266,4 +266,10 @@ class ConnectSpec extends ObjectBehavior
     
         $this->validateResponseParameters($response)->shouldReturn(true);
     }
+
+    public function it_logs_user_out_locally(Session $session)
+    {
+        $session->store('authn.logout.local', 1)->shouldBeCalled();
+        $this->logoutLocally();
+    }
 }
