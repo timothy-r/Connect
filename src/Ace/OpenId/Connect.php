@@ -1,5 +1,7 @@
 <?php namespace Ace\OpenId;
 
+use Ace\OpenId\ResponseException;
+
 use Ace\Token\Csrf;
 use Ace\Token\Nonce;
 use Ace\Session;
@@ -7,6 +9,8 @@ use Ace\StoreInterface;
 
 class Connect
 {
+    private static $client_id = 'Client';
+
     private $session;
     
     private $nonce_store;
@@ -53,4 +57,29 @@ class Connect
         }
     }
 
+    /**
+    * Get all the parameters to make a request to central authn
+    * @return array
+    */
+    public function generateRequestParameters($redirect_uri)
+    {
+        return [
+            'response_type' => 'id_token token',
+            'client_id' => self::$client_id,
+            'redirect_uri' => $redirect_uri,
+            'scope' => 'openid',
+            'state' => $this->generateCsrfToken(),
+            'nonce' => $this->generateNonceToken(),
+        ];
+    }
+    
+    /**
+    * validate necessary response parameters are set and have correct values
+    */
+    public function validateResponse(array $parameters)
+    {
+        if (!isset($parameters['access_token'])){
+            throw new ResponseException("'access_token' parameter must be set");
+        }
+    }
 }

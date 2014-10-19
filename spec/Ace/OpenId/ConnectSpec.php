@@ -98,4 +98,23 @@ class ConnectSpec extends ObjectBehavior
         $store->contains($nonce_token)->willReturn(true);
         $this->validateNonceToken(new Nonce($nonce_token))->shouldReturn(false);
     }
+
+    public function it_generates_all_request_parameters(Session $session)
+    {
+        $redirect_uri = 'https://my.host.com/page';
+
+        $this->generateRequestParameters($redirect_uri)->shouldBeArray();
+        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('response_type');
+        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('client_id');
+        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('redirect_uri');
+        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('scope');
+        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('state');
+        $this->generateRequestParameters($redirect_uri)->shouldHaveKey('nonce');
+    }
+
+    public function it_fails_validation_when_response_is_empty(Session $session, StoreInterface $store)
+    {
+        $response = [];
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponse', array($response));
+    }
 }
