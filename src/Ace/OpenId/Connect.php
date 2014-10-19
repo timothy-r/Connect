@@ -3,8 +3,7 @@
 use Lcobucci\JWT\Parser as JWTParser;
 use Ace\OpenId\ResponseException;
 
-use Ace\Token\Csrf;
-use Ace\Token\Nonce;
+use Ace\Token;
 use Ace\Session;
 use Ace\StoreInterface;
 
@@ -68,11 +67,11 @@ class Connect
             throw new ResponseException("'token_type' parameter is invalid");
         }
 
-        if (!$this->validateCsrfToken(new Csrf($parameters['state']))){
+        if (!$this->validateCsrfToken(new Token($parameters['state']))){
             throw new ResponseException("'state' parameter is invalid");
         }
 
-        if (!$this->validateNonceToken(new Nonce($parameters['nonce']))){
+        if (!$this->validateNonceToken(new Token($parameters['nonce']))){
             throw new ResponseException("'nonce' parameter is invalid");
         }
 
@@ -105,12 +104,12 @@ class Connect
         return 'bearer' == strtolower($type);
     }
 
-    private function validateCsrfToken(Csrf $csrf)
+    private function validateCsrfToken(Token $csrf)
     {
         return $csrf->matches($this->session->get('authn.csrf.token'));
     }
 
-    private function validateNonceToken(Nonce $nonce)
+    private function validateNonceToken(Token $nonce)
     {
         if ($nonce->matches($this->session->get('authn.nonce.token'))){
             // check nonce hasn't been used before
@@ -122,7 +121,7 @@ class Connect
 
     private function generateCsrfToken()
     {
-        $csrf = new Csrf;
+        $csrf = new Token;
         $key = 'authn.csrf.token';
         $this->session->store($key, $csrf);
         return $csrf;
@@ -130,7 +129,7 @@ class Connect
 
     private function generateNonceToken()
     {
-        $nonce = new Nonce;
+        $nonce = new Token;
         $key = 'authn.nonce.token';
         $this->session->store($key, $nonce);
         return $nonce;
