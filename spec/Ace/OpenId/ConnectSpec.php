@@ -3,6 +3,9 @@
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
+use Lcobucci\JWT\Parser as JWTParser;
+use Lcobucci\JWT\Token as JWTToken;
+
 use Ace\Session;
 use Ace\StoreInterface;
 
@@ -11,9 +14,9 @@ use Ace\Token\Nonce;
 
 class ConnectSpec extends ObjectBehavior
 {
-    public function let(Session $session, StoreInterface $store)
+    public function let(Session $session, StoreInterface $store, JWTParser $parser)
     {
-        $this->beConstructedWith($session, $store);
+        $this->beConstructedWith($session, $store, $parser);
     }
 
     public function it_is_initializable()
@@ -21,28 +24,14 @@ class ConnectSpec extends ObjectBehavior
         $this->shouldHaveType('Ace\OpenId\Connect');
     }
 
-    public function it_generates_csrf_token()
-    {
-        $this->generateCsrfToken()->shouldHaveType('Ace\Token\Csrf');
-    }
-
-    public function it_generates_nonce_token()
-    {
-        $this->generateNonceToken()->shouldHaveType('Ace\Token\Nonce');
-    }
-
-    public function it_stores_csrf_token_locally(Session $session)
+    public function it_stores_tokens_locally(Session $session)
     {   
+        $redirect_uri = 'https://my.host.com/page';
         $csrf_key = 'authn.csrf.token';
-        $session->store($csrf_key, Argument::any())->shouldBeCalled();
-        $this->generateCsrfToken();
-    }
-
-    public function it_stores_nonce_token_locally(Session $session)
-    {   
         $nonce_key = 'authn.nonce.token';
+        $session->store($csrf_key, Argument::any())->shouldBeCalled();
         $session->store($nonce_key, Argument::any())->shouldBeCalled();
-        $this->generateNonceToken();
+        $this->generateRequestParameters($redirect_uri)->shouldBeArray();
     }
 
     public function it_fails_validation_when_neither_token_is_stored_locally(Session $session)
@@ -175,6 +164,79 @@ class ConnectSpec extends ObjectBehavior
         ];
         $session->get('authn.csrf.token')->willReturn('xxx');
         $session->get('authn.nonce.token')->willReturn($nonce);
+
         $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
+    }
+
+    public function it_fails_validation_when_id_token_fails_verification(Session $session, StoreInterface $store, JWTParser $parser, JWTToken $token)
+    {
+        $nonce = 'abcdef';
+        $state = '123456';
+        $id_token = 'invalid';
+        $client_key = '';
+        $response = [
+            'access_token' => 'xyz',
+            'token_type' => 'bearer',
+            'id_token' => $id_token,
+            'state' => $state,
+            'nonce' => $nonce,
+        ];
+        $session->get('authn.csrf.token')->willReturn($state);
+        $session->get('authn.nonce.token')->willReturn($nonce);
+
+        // mock the claims object returned from parse()
+        $parser->parse($id_token)->willReturn($token);
+        $token->verify(Argument::any())->willReturn(false);
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
+    }
+
+    public function it_fails_validation_when_id_token_fails_validation(Session $session, StoreInterface $store, JWTParser $parser, JWTToken $token)
+    {
+        $nonce = 'abcdef';
+        $state = '123456';
+        $id_token = 'invalid';
+        $client_key = '';
+        $response = [
+            'access_token' => 'xyz',
+            'token_type' => 'bearer',
+            'id_token' => $id_token,
+            'state' => $state,
+            'nonce' => $nonce,
+        ];
+        $session->get('authn.csrf.token')->willReturn($state);
+        $session->get('authn.nonce.token')->willReturn($nonce);
+
+        // mock the claims object returned from parse()
+        $parser->parse($id_token)->willReturn($token);
+        $token->verify(Argument::any())->willReturn(true);
+        $token->getClaims()->willReturn(['sub' => 'abc']);
+        $token->validate(Argument::any(), Argument::any(), 'abc')->willReturn(false);
+
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
+    }
+
+    public function it_passes_validation_when_request_is_valid(Session $session, StoreInterface $store, JWTParser $parser, JWTToken $token)
+    {
+        $nonce = 'abcdef';
+        $state = '123456';
+        $id_token = 'invalid';
+        $client_key = '';
+        $response = [
+            'access_token' => 'xyz',
+            'token_type' => 'bearer',
+            'id_token' => $id_token,
+            'state' => $state,
+            'nonce' => $nonce,
+        ];
+        $session->get('authn.csrf.token')->willReturn($state);
+        $session->get('authn.nonce.token')->willReturn($nonce);
+
+        // mock the claims object returned from parse()
+        $parser->parse($id_token)->willReturn($token);
+        $token->verify(Argument::any())->willReturn(true);
+        $token->getClaims()->willReturn(['sub' => 'abc']);
+        $token->validate(Argument::any(), Argument::any(), 'abc')->willReturn(true);
+    
+        $this->validateResponseParameters($response)->shouldReturn(true);
     }
 }
