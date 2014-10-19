@@ -73,32 +73,6 @@ class ConnectSpec extends ObjectBehavior
         $this->localTokensExist()->shouldReturn(true);
     }
 
-    public function it_validates_tokens_match(Session $session)
-    {
-        $csrf_token = '123456';
-        $nonce_token = 'abcdef';
-        $session->get('authn.csrf.token')->willReturn($csrf_token);
-        $session->get('authn.nonce.token')->willReturn($nonce_token);
-        $this->validateCsrfToken(new Csrf($csrf_token))->shouldReturn(true);
-        $this->validateNonceToken(new Nonce($nonce_token))->shouldReturn(true);
-    }
-
-    public function it_validates_nonce_is_not_reused(Session $session, StoreInterface $store)
-    {
-        $nonce_token = 'abcdef';
-        $session->get('authn.nonce.token')->willReturn($nonce_token);
-        $store->contains($nonce_token)->willReturn(false);
-        $this->validateNonceToken(new Nonce($nonce_token))->shouldReturn(true);
-    }
-
-    public function it_fails_validation_when_nonce_is_reused(Session $session, StoreInterface $store)
-    {
-        $nonce_token = 'abcdef';
-        $session->get('authn.nonce.token')->willReturn($nonce_token);
-        $store->contains($nonce_token)->willReturn(true);
-        $this->validateNonceToken(new Nonce($nonce_token))->shouldReturn(false);
-    }
-
     public function it_generates_all_request_parameters(Session $session)
     {
         $redirect_uri = 'https://my.host.com/page';
@@ -124,7 +98,7 @@ class ConnectSpec extends ObjectBehavior
             'access_token' => 'xyz',
             'id_token' => 'value',
             'nonce' => 'abcdef',
-            'csrf' => '123456',
+            'state' => '123456',
         ];
         $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
     }
@@ -133,7 +107,10 @@ class ConnectSpec extends ObjectBehavior
     {
         $response = [
             'access_token' => 'xyz',
-            'token_type' => 'garbage'
+            'id_token' => 'value',
+            'token_type' => 'garbage',
+            'nonce' => 'abcdef',
+            'state' => '123456',
         ];
         $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
     }
@@ -144,7 +121,7 @@ class ConnectSpec extends ObjectBehavior
             'access_token' => 'xyz',
             'token_type' => 'bearer',
             'nonce' => 'abcdef',
-            'csrf' => '123456',
+            'state' => '123456',
         ];
         $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
     }
@@ -155,12 +132,27 @@ class ConnectSpec extends ObjectBehavior
             'access_token' => 'xyz',
             'token_type' => 'bearer',
             'id_token' => 'value',
-            'csrf' => '123456'
+            'state' => '123456'
         ];
         $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
     }
 
-    public function it_fails_validation_when_csrf_is_missing(Session $session, StoreInterface $store)
+    public function it_fails_validation_when_nonce_is_invalid(Session $session, StoreInterface $store)
+    {
+        $state = '123456';
+        $response = [
+            'access_token' => 'xyz',
+            'token_type' => 'bearer',
+            'id_token' => 'value',
+            'state' => $state,
+            'nonce' => 'abcdef',
+        ];
+        $session->get('authn.csrf.token')->willReturn($state);
+        $session->get('authn.nonce.token')->willReturn('zzz2');
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
+    }
+
+    public function it_fails_validation_when_state_is_missing(Session $session, StoreInterface $store)
     {
         $response = [
             'access_token' => 'xyz',
@@ -168,6 +160,21 @@ class ConnectSpec extends ObjectBehavior
             'id_token' => 'value',
             'nonce' => 'abcdef'
         ];
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
+    }
+
+    public function it_fails_validation_when_state_is_invalid(Session $session, StoreInterface $store)
+    {
+        $nonce = 'abcdef';
+        $response = [
+            'access_token' => 'xyz',
+            'token_type' => 'bearer',
+            'id_token' => 'value',
+            'state' => '123456',
+            'nonce' => $nonce,
+        ];
+        $session->get('authn.csrf.token')->willReturn('xxx');
+        $session->get('authn.nonce.token')->willReturn($nonce);
         $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
     }
 }

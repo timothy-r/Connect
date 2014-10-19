@@ -42,12 +42,12 @@ class Connect
         return $this->session->has('authn.csrf.token') && $this->session->has('authn.nonce.token');
     }
 
-    public function validateCsrfToken(Csrf $csrf)
+    private function validateCsrfToken(Csrf $csrf)
     {
         return $csrf->matches($this->session->get('authn.csrf.token'));
     }
 
-    public function validateNonceToken(Nonce $nonce)
+    private function validateNonceToken(Nonce $nonce)
     {
         if($nonce->matches($this->session->get('authn.nonce.token'))){
             // check nonce hasn't been used before
@@ -79,7 +79,7 @@ class Connect
     public function validateResponseParameters(array $parameters)
     {
         // validate that expected keys are set
-        $required_keys = ['access_token', 'token_type', 'id_token', 'nonce', 'csrf'];
+        $required_keys = ['access_token', 'token_type', 'id_token', 'nonce', 'state'];
         foreach ($required_keys as $key) {
             if (!isset($parameters[$key])){
                 throw new ResponseException("'$key' parameter must be set");
@@ -89,6 +89,14 @@ class Connect
         // validate key values
         if ('bearer' != $parameters['token_type']){
             throw new ResponseException("'token_type' parameter must equal 'bearer'");
+        }
+
+        if (!$this->validateCsrfToken(new Csrf($parameters['state']))){
+            throw new ResponseException("'state' parameter is invalid");
+        }
+
+        if (!$this->validateNonceToken(new Nonce($parameters['nonce']))){
+            throw new ResponseException("'nonce' parameter is invalid");
         }
     }
 }
