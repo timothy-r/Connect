@@ -4,8 +4,56 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "12141704b60642f674ba1b8cc56747df",
-    "packages": [],
+    "hash": "dd678f724dc933054f70b68ef0663072",
+    "packages": [
+        {
+            "name": "lcobucci/jwt",
+            "version": "dev-develop",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/lcobucci/jwt.git",
+                "reference": "8bb74bcf22c34a0a873e5e147fe7550135a2f0cc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/lcobucci/jwt/zipball/8bb74bcf22c34a0a873e5e147fe7550135a2f0cc",
+                "reference": "8bb74bcf22c34a0a873e5e147fe7550135a2f0cc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5"
+            },
+            "require-dev": {
+                "phpmd/phpmd": "*",
+                "phpunit/phpunit": "4.0.x",
+                "squizlabs/php_codesniffer": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Lcobucci\\JWT\\": "src",
+                    "Lcobucci\\JWT\\Test\\": "test"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Luís Otávio Cobucci Oblonczyk",
+                    "email": "lcobucci@gmail.com",
+                    "role": "developer"
+                }
+            ],
+            "description": "A simple library to work with JSON Web Token and JSON Web Signature",
+            "keywords": [
+                "JWS",
+                "jwt"
+            ],
+            "time": "2014-03-26 18:27:03"
+        }
+    ],
     "packages-dev": [
         {
             "name": "doctrine/instantiator",
@@ -485,7 +533,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "lcobucci/jwt": 20
+    },
     "prefer-stable": false,
     "platform": [],
     "platform-dev": []

@@ -1,4 +1,7 @@
 {
+    "require" : {
+        "lcobucci/jwt": "dev-develop"
+    },
     "require-dev": {
         "phpspec/phpspec": "~2.0"
     },
