@@ -48,8 +48,8 @@ class Connect
             'client_id' => self::$client_id,
             'redirect_uri' => $redirect_uri,
             'scope' => 'openid',
-            'state' => $this->generateCsrfToken(),
-            'nonce' => $this->generateNonceToken(),
+            'state' => $this->generateSessionToken(self::$csrf_session_key),
+            'nonce' => $this->generateSessionToken(self::$nonce_session_key),
         ];
     }
     
@@ -125,18 +125,11 @@ class Connect
         }
     }
 
-    private function generateCsrfToken()
+    private function generateSessionToken($session_key)
     {
-        $csrf = new Token;
-        $this->session->store(self::$csrf_session_key, $csrf);
-        return $csrf;
-    }
-
-    private function generateNonceToken()
-    {
-        $nonce = new Token;
-        $this->session->store(self::$nonce_session_key, $nonce);
-        return $nonce;
+        $token = new Token;
+        $this->session->store($session_key, $token);
+        return $token;
     }
     
     /**
