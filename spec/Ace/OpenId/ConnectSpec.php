@@ -129,15 +129,34 @@ class ConnectSpec extends ObjectBehavior
     public function it_fails_validation_when_nonce_is_invalid(Session $session, StoreInterface $store)
     {
         $state = '123456';
+        $nonce = 'invalid-nonce';
         $response = [
             'access_token' => 'xyz',
             'token_type' => 'bearer',
             'id_token' => 'value',
             'state' => $state,
-            'nonce' => 'abcdef',
+            'nonce' => $nonce,
         ];
         $session->get('authn.csrf.token')->willReturn($state);
         $session->get('authn.nonce.token')->willReturn('zzz2');
+        $store->contains($nonce)->willReturn(false);
+        $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
+    }
+
+    public function it_fails_validation_when_nonce_has_been_used(Session $session, StoreInterface $store)
+    {
+        $state = 'valid-state';
+        $nonce = 'valid-nonce';
+        $response = [
+            'access_token' => 'xyz',
+            'token_type' => 'bearer',
+            'id_token' => 'value',
+            'state' => $state,
+            'nonce' => $nonce,
+        ];
+        $session->get('authn.csrf.token')->willReturn($state);
+        $session->get('authn.nonce.token')->willReturn($nonce);
+        $store->contains($nonce)->willReturn(true);
         $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
     }
 
@@ -164,6 +183,7 @@ class ConnectSpec extends ObjectBehavior
         ];
         $session->get('authn.csrf.token')->willReturn('xxx');
         $session->get('authn.nonce.token')->willReturn($nonce);
+        $store->contains($nonce)->willReturn(false);
 
         $this->shouldThrow('Ace\OpenId\ResponseException')->during('validateResponseParameters', array($response));
     }
@@ -183,6 +203,8 @@ class ConnectSpec extends ObjectBehavior
         ];
         $session->get('authn.csrf.token')->willReturn($state);
         $session->get('authn.nonce.token')->willReturn($nonce);
+        $store->add($nonce)->shouldBeCalled();
+        $store->contains($nonce)->willReturn(false);
 
         // mock the claims object returned from parse()
         $parser->parse($id_token)->willReturn($token);
@@ -205,6 +227,8 @@ class ConnectSpec extends ObjectBehavior
         ];
         $session->get('authn.csrf.token')->willReturn($state);
         $session->get('authn.nonce.token')->willReturn($nonce);
+        $store->add($nonce)->shouldBeCalled();
+        $store->contains($nonce)->willReturn(false);
 
         // mock the claims object returned from parse()
         $parser->parse($id_token)->willReturn($token);
@@ -230,6 +254,9 @@ class ConnectSpec extends ObjectBehavior
         ];
         $session->get('authn.csrf.token')->willReturn($state);
         $session->get('authn.nonce.token')->willReturn($nonce);
+        
+        $store->contains($nonce)->willReturn(false);
+        $store->add($nonce)->shouldBeCalled();
 
         // mock the claims object returned from parse()
         $parser->parse($id_token)->willReturn($token);

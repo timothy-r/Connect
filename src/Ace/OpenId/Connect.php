@@ -77,6 +77,7 @@ class Connect
         }
 
         // add the new nonce value to the store to prevent it being used again
+        $this->nonce_store->add($parameters['nonce']);
 
         if (!$this->validateIdToken($parameters['id_token'])){
             throw new ResponseException("'id_token' parameter is invalid");
