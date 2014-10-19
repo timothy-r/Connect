@@ -28,4 +28,19 @@ class Connect
         $this->session->store($key, $nonce);
         return $nonce;
     }
+
+    public function localTokensExist()
+    {
+        return $this->session->has('authn.csrf.token') && $this->session->has('authn.nonce.token');
+    }
+
+    public function validateCsrfToken(Csrf $csrf)
+    {
+        return $csrf->matches($this->session->get('authn.csrf.token'));
+    }
+
+    public function validateNonceToken(Nonce $nonce)
+    {
+        return $nonce->matches($this->session->get('authn.nonce.token'));
+    }
 }

@@ -4,9 +4,13 @@ class Csrf
 {
     private $value;
     
-    public function __construct()
+    public function __construct($value = null)
     {
-        $this->value = hash('md5', rand());
+        if (is_null($value)){
+            $this->value = hash('md5', rand());
+        } else {
+            $this->value = $value;
+       }
     }
 
     public function __toString()

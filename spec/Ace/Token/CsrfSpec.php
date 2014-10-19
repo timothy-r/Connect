@@ -32,4 +32,11 @@ class CsrfSpec extends ObjectBehavior
         $token = $this->__toString();
         $this->matches($token)->shouldBeEqualTo(true);
     }
+
+    public function it_can_be_created_with_a_value()
+    {
+        $value = 'abc123';
+        $this->beConstructedWith($value);
+        $this->__toString()->shouldBeEqualTo($value);
+    }
 }
