@@ -58,6 +58,14 @@ class ConnectSpec extends ObjectBehavior
         $session->has('authn.nonce.token')->willReturn(true);
         $this->localTokensExist()->shouldReturn(false);
     }
+
+    public function it_fails_validation_when_nonce_token_is_not_stored_locally(Session $session)
+    {
+        $session->has('authn.csrf.token')->willReturn(true);
+        $session->has('authn.nonce.token')->willReturn(false);
+        $this->localTokensExist()->shouldReturn(false);
+    }
+
     public function it_passes_validation_when_tokens_are_stored_locally(Session $session)
     {
         $session->has('authn.csrf.token')->willReturn(true);
@@ -81,5 +89,13 @@ class ConnectSpec extends ObjectBehavior
         $session->get('authn.nonce.token')->willReturn($nonce_token);
         $store->contains($nonce_token)->willReturn(false);
         $this->validateNonceToken(new Nonce($nonce_token))->shouldReturn(true);
+    }
+
+    public function it_fails_validation_when_nonce_is_reused(Session $session, StoreInterface $store)
+    {
+        $nonce_token = 'abcdef';
+        $session->get('authn.nonce.token')->willReturn($nonce_token);
+        $store->contains($nonce_token)->willReturn(true);
+        $this->validateNonceToken(new Nonce($nonce_token))->shouldReturn(false);
     }
 }
